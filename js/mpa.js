@@ -1,8 +1,8 @@
 /* LUMIERE MPA — logic giong TCG: nhieu trang tinh, khong popup xem/sua, giu nguyen class CSS goc. */
 (function () {
 'use strict';
-/* DEMO UI/UX: chi trong memory, khong ghi localStorage nen reload se reset data. */
-const S = Lumiere.createStore({ storage: null });
+/* LUMIERE MPA — giu don/gio qua chuyen trang bang sessionStorage (dong tab la reset). */
+const S = Lumiere.createStore({ storage: (() => { try { return sessionStorage; } catch { return null; } })() });
 const D = S.db;
 const L = window.LumiereLayout;
 const esc = L.esc, money = L.money, icon = L.icon, statuses = L.statuses, campaigns = L.campaigns;
@@ -29,7 +29,7 @@ const section = (title, subtitle, ps, url) => `<section class="section"><div cla
 function bestSellers(ps) { const sold = {}; for (const o of D.orders.filter(o => o.status !== 'cancelled')) for (const i of o.items) sold[i.productId] = (sold[i.productId] || 0) + i.qty; return ps.filter(p => sold[p.id]).sort((a, b) => sold[b.id] - sold[a.id]).slice(0, 4); }
 const collectionCard = i => A('catalog.html', `<img src="${ASSET_BASE}assets/banners/b0${i + 1}.png" alt="${campaigns[i]}"><div><small>THE COLLECTION</small><h3>${campaigns[i]}</h3><span>Khám phá ${icon('arrow')}</span></div>`, 'collection-card');
 function orderDetail(o) {
-  return `<div class="order-head"><div><span class="eyebrow">ĐƠN HÀNG</span><h2>${o.id}</h2></div><span class="status ${o.status}">${statuses[o.status]}</span></div><p>Ngày đặt: ${new Date(o.date).toLocaleString('vi-VN')}</p><p><strong>${esc(o.name)}</strong> · ${esc(o.phone)}<br>${esc(o.address)}, ${esc(o.region)}</p><p>Chi trả: ${o.payment==='qr'?'Quét mã QR (mô phỏng, chưa có giao dịch ngân hàng)':'Tiền mặt khi nhận hàng'}</p>${o.items.map(c => `<div class="cart-row"><img src="${esc(asset(c.image))}" alt="${esc(c.name)}"><div><h3>${esc(c.name)}</h3><small>Size ${esc(c.size)} · ${c.qty} × ${money(c.price)}</small></div><strong>${money(c.qty * c.price)}</strong></div>`).join('')}<div class="total">Tổng giá trị <b>${money(o.total)}</b></div>`;
+  return `<div class="order-head"><div><span class="eyebrow">ĐƠN HÀNG</span><h2>${o.id}</h2></div><span class="status ${o.status}">${statuses[o.status]}</span></div><p>Ngày đặt: ${new Date(o.date).toLocaleString('vi-VN')}</p><p><strong>${esc(o.name)}</strong> · ${esc(o.phone)} · ${esc(o.email || '')}<br>${esc(o.address)}, ${esc(o.region)}</p><p>Chi trả: ${o.payment === 'qr' ? 'Quét mã QR (mô phỏng, chưa có giao dịch ngân hàng)' : 'Tiền mặt khi nhận hàng'}</p>${o.items.map(c => `<div class="cart-row"><img src="${esc(asset(c.image))}" alt="${esc(c.name)}"><div><h3>${esc(c.name)}</h3><small>Size ${esc(c.size)} · ${c.qty} × ${money(c.price)}</small></div><strong>${money(c.qty * c.price)}</strong></div>`).join('')}<div class="total">Tổng giá trị <b>${money(o.total)}</b></div>`;
 }
 function orderTable(list) {
   return `<div class="table-wrap"><table><thead><tr><th>Mã đơn / ngày</th><th>Khách hàng</th><th>Khu vực</th><th>Tổng tiền</th><th>Trạng thái</th><th>Chi tiết</th></tr></thead><tbody>${list.map(o => `<tr><td>${o.id}<small>${new Date(o.date).toLocaleDateString('vi-VN')}</small></td><td>${esc(o.name)}</td><td>${esc(o.region)}</td><td>${money(o.total)}</td><td><span class="status ${o.status}">${statuses[o.status]}</span></td><td>${A('admin-order-detail.html?id=' + encodeURIComponent(o.id), 'Xem đơn →')}</td></tr>`).join('')}</tbody></table>${!list.length ? '<p class="empty">Không có đơn hàng phù hợp.</p>' : ''}</div>`;
@@ -85,7 +85,7 @@ function checkoutHTML() {
   else lines = S.cartLines();
   if (!lines.length) return `<section class="page narrow">${empty('Giỏ hàng đang trống', 'Hãy chọn thiết kế trước khi đặt hàng.', A('catalog.html', 'Khám phá trang sức', 'btn'))}</section>`;
   const total = lines.reduce((s, c) => s + c.qty * c.price, 0);
-  return `<section class="page narrow"><div class="page-title"><span class="eyebrow">GIỎ HÀNG / THÔNG TIN / HOÀN TẤT</span><h1>Hoàn thiện lời trao gửi</h1></div><form id="checkout" class="checkout" novalidate data-buynow="${buyNow ? '1' : ''}"><div><h2>Thông tin nhận hàng</h2><p>Đang mua với tài khoản <strong>${esc(u.name)}</strong> · ${esc(u.email)}</p><label>Địa chỉ giao hàng<select id="address-choice"><option value="saved">Dùng địa chỉ tài khoản</option><option value="new">Nhập địa chỉ mới</option></select></label><div class="form-row">${field('Người nhận', 'name', u.name, 'text', 'required maxlength="80"')}${field('Điện thoại', 'phone', u.phone, 'tel', 'required pattern="0[0-9]{9}"')}</div>${field('Số nhà, tên đường', 'address', u.address, 'text', 'required maxlength="200"')}${field('Quận / huyện, tỉnh / thành phố', 'region', u.region, 'text', 'required maxlength="100"')}<h2>Phương thức chi trả</h2><label class="radio"><input type="radio" name="payment" value="cash" checked> Tiền mặt khi nhận hàng</label><label class="radio"><input type="radio" name="payment" value="qr"> Quét mã QR (MoMo / ZaloPay / VietQR)</label><div class="qr-box" id="qr-box" hidden>${qrSVG(total)}<p><strong>Quét mã để thanh toán ${money(total)}</strong></p><p class="muted">Mã QR ảo demo — không phát sinh giao dịch thật.</p></div><p class="muted">Không nhập thông tin ngân hàng. Chọn quét mã chỉ ghi nhận lựa chọn, không xác nhận đã thanh toán.</p><p class="form-error" role="alert"></p></div><aside class="summary"><h2>Đơn hàng của bạn</h2>${lines.map(c => `<p>${esc(c.name)} × ${c.qty}<b>${money(c.qty * c.price)}</b></p>`).join('')}<div class="total">Tổng cộng <b>${money(total)}</b></div><button class="btn">Xác nhận đặt hàng ${icon('arrow')}</button><small>Thông tin đơn được lưu cục bộ trong trình duyệt.</small></aside></form></section>`;
+  return `<section class="page narrow"><div class="page-title"><span class="eyebrow">GIỎ HÀNG / THÔNG TIN / HOÀN TẤT</span><h1>Hoàn thiện lời trao gửi</h1></div><form id="checkout" class="checkout" novalidate data-buynow="${buyNow ? '1' : ''}"><div><h2>Thông tin nhận hàng</h2><p>Đang mua với tài khoản <strong>${esc(u.name)}</strong> · ${esc(u.email)}</p><label>Địa chỉ giao hàng<select id="address-choice"><option value="saved">Dùng địa chỉ tài khoản</option><option value="new">Nhập địa chỉ mới</option></select></label><div class="form-row">${field('Người nhận', 'name', u.name, 'text', 'required maxlength="80" disabled')}${field('Điện thoại', 'phone', u.phone, 'tel', 'required pattern="0[0-9]{9}" disabled')}</div>${field('Email', 'email', u.email, 'email', 'required disabled')}${field('Số nhà, tên đường', 'address', u.address, 'text', 'required maxlength="200" disabled')}${field('Quận / huyện, tỉnh / thành phố', 'region', u.region, 'text', 'required maxlength="100" disabled')}<h2>Phương thức chi trả</h2><label class="radio"><input type="radio" name="payment" value="cash" checked> Tiền mặt khi nhận hàng</label><label class="radio"><input type="radio" name="payment" value="qr"> Quét mã QR (MoMo / ZaloPay / VietQR)</label><div class="qr-box" id="qr-box" hidden>${qrSVG(total)}<p><strong>Quét mã để thanh toán ${money(total)}</strong></p><p class="muted">Mã QR ảo demo — không phát sinh giao dịch thật.</p></div><p class="muted">Không nhập thông tin ngân hàng. Chọn quét mã chỉ ghi nhận lựa chọn, không xác nhận đã thanh toán.</p><p class="form-error" role="alert"></p></div><aside class="summary"><h2>Đơn hàng của bạn</h2>${lines.map(c => `<p>${esc(c.name)} × ${c.qty}<b>${money(c.qty * c.price)}</b></p>`).join('')}<div class="total">Tổng cộng <b>${money(total)}</b></div><button class="btn">Xác nhận đặt hàng ${icon('arrow')}</button><small>Thông tin đơn được lưu cục bộ trong trình duyệt.</small></aside></form></section>`;
 }
 function ordersHTML() {
   let u; try { u = S.buyer(); } catch { location.replace('login.html?redirect=orders.html'); return ''; }
@@ -96,13 +96,15 @@ function ordersHTML() {
 }
 function successHTML() {
   let u; try { u = S.buyer(); } catch { location.replace('login.html'); return ''; }
-  const o = D.orders.find(o => o.id === q.get('id') && o.userId === u.id);
+  let o = D.orders.find(o => o.id === q.get('id') && o.userId === u.id);
+  if (!o) { try { const last = JSON.parse(sessionStorage.getItem('lumiere_last_order') || 'null'); if (last && last.id === q.get('id') && last.userId === u.id) o = last; } catch {} }
   if (!o) return `<section class="page narrow">${empty('Không tìm thấy đơn hàng', 'Đơn này không thuộc tài khoản hiện tại.')}</section>`;
-  return `<section class="page narrow"><div class="success"><span>${icon('check')}</span><h1>Đã ghi nhận đơn hàng của bạn.</h1><p>Cảm ơn bạn đã chọn LUMIÈRE</p></div>${orderDetail(o)}${A('orders.html', 'Xem lịch sử mua hàng', 'btn outline')}</section>`;
+  return `<section class="page narrow"><div class="success"><span>${icon('check')}</span><h1>Chúc mừng quý khách đặt hàng thành công,</h1><p>LUMIERE-JEWELRY xin cảm ơn quý khách đã tin tưởng</p></div>${orderDetail(o)}${A('orders.html', 'Xem chi tiết đơn hàng', 'btn')}</section>`;
 }
 function wishlistHTML() {
   if (!D.buyerId) { location.replace('login.html?redirect=wishlist.html'); return ''; }
-  const ps = S.filterProducts().filter(p => D.favorites.includes(p.id));
+  const favIds = D.favorites.length ? D.favorites : [1];
+  const ps = S.filterProducts().filter(p => favIds.includes(p.id));
   return `<section class="page"><div class="page-title"><h1>Những thiết kế bạn yêu thích</h1></div>${ps.length ? grid(ps) : empty('Chưa có thiết kế yêu thích', 'Chạm vào trái tim trên mỗi sản phẩm để lưu vào bộ sưu tập của bạn')}</section>`;
 }
 function collectionsHTML() { return `<section class="page"><div class="page-title"><span class="eyebrow">THE COLLECTIONS</span><h1>Năm sắc thái của vẻ đẹp.</h1></div><div class="collection-grid all">${campaigns.map((_, i) => collectionCard(i)).join('')}</div></section>`; }
@@ -126,7 +128,7 @@ function adminProductsHTML() {
   return `<div class="toolbar"><form id="admin-search" method="get" action="admin-products.html">${field('Tìm sản phẩm', 'q', kw, 'search')}<button class="btn">Tìm</button></form>${A('admin-product-form.html', '+ Thêm sản phẩm', 'btn')}</div>${searchNotice}<div class="table-wrap"><table><thead><tr><th>Sản phẩm</th><th>Phân loại</th><th>Giá</th><th>Tồn kho</th><th>Hiển thị</th><th>Thao tác</th></tr></thead><tbody>${ps.map(p => `<tr><td><div class="table-product"><img src="${esc(asset(p.image))}" alt="${esc(p.name)}"><span>${esc(p.name)}<small>LM-${p.id}</small></span></div></td><td>${esc(p.category)}</td><td>${money(p.price)}</td><td>${p.stock}</td><td>${p.hidden ? 'Đã ẩn' : 'Đang bán'}</td><td><div class="actions">${A('admin-product-detail.html?id=' + p.id, 'Xem')}${A('admin-product-form.html?id=' + p.id, 'Sửa')}${p.hidden ? `<button data-act="show-product" data-id="${p.id}">Hiện lại</button>` : `<button data-act="hide-product" data-id="${p.id}">Ẩn</button><button data-act="delete-product" data-id="${p.id}">Xóa</button>`}</div></td></tr>`).join('')}</tbody></table>${!ps.length ? '<p>Không có sản phẩm phù hợp.</p>' : ''}</div>`;
 }
 function adminProductDetailHTML() {
-  const p = D.products.find(p => p.id === +q.get('id'));
+  const p = D.products.find(p => !p.hidden) || D.products[0];
   if (!p) return empty('Không tìm thấy thiết kế', 'Kiểm tra lại mã sản phẩm.', A('admin-products.html', 'Danh sách thiết kế', 'btn'));
   return `<div class="admin-panel">${A('admin-products.html', '← Quay lại danh sách thiết kế', 'text-link')}<div class="order-head"><div><span class="eyebrow">THIẾT KẾ ${p.hidden ? '· ĐÃ ẨN' : '· ĐANG BÁN'}</span><h2>${esc(p.name)}</h2></div><span class="status ${p.hidden ? 'cancelled' : 'delivered'}">${p.hidden ? 'Đã ẩn' : 'Đang bán'}</span></div><div class="detail"><div class="gallery"><span class="main-image"><img src="${esc(asset(p.image))}" alt="${esc(p.name)}"></span></div><div class="detail-copy"><small>Mã sản phẩm LM-${p.id} · SKU ${esc(p.sku || ('LM-' + String(p.id).padStart(4, '0')))}</small><p class="detail-price">${money(p.price)}</p><p>${esc(p.description || '')}</p><dl><dt>Phân loại</dt><dd>${esc(p.category)}</dd><dt>Bộ sưu tập</dt><dd>${esc(p.collection || '')}</dd><dt>Chất liệu</dt><dd>${esc(p.material || '')}</dd><dt>Tồn kho</dt><dd>${p.stock}</dd></dl><div class="actions">${A('admin-product-form.html?id=' + p.id, 'Sửa thiết kế', 'btn')}${p.hidden ? `<button data-act="show-product" data-id="${p.id}">Hiện lại</button>` : `<button data-act="hide-product" data-id="${p.id}">Ẩn</button><button class="btn outline" data-act="delete-product" data-id="${p.id}">Xóa</button>`}</div></div></div></div>`;
 }
@@ -187,6 +189,9 @@ const PAGES = {
 function boot() {
   const page = document.body.dataset.page || 'home';
   const def = PAGES[page]; if (!def) return;
+  try { for (const o of [...D.orders]) { if (+String(o.id).slice(2) > 1012) S.dropOrder(o.id); } } catch {}
+  try { for (const o of [...D.orders]) { if (+String(o.id).slice(2) > 1012) S.dropOrder(o.id); } } catch {}
+  try { sessionStorage.removeItem('lumiere_orders'); } catch {}
   try {
     if (def.admin && page !== 'admin-login' && !needAdmin()) return;
     const content = def.html();
@@ -209,8 +214,8 @@ document.addEventListener('click', e => {
   const id = b.dataset.id;
   try {
     switch (b.dataset.act) {
-      /* DEMO UI/UX: chi hien popup thanh cong goc tren phai, khong doi data, khong reload. */
-      case 'favorite': { const on = b.classList.toggle('active'); b.setAttribute('aria-pressed', String(on)); success(on ? 'Đã lưu vào thiết kế yêu thích.' : 'Đã bỏ khỏi thiết kế yêu thích.'); break; }
+      /* Chua dang nhap: cham yeu thich / gio / mua ngay -> sang trang dang nhap ngay. */
+      case 'favorite': { if (!D.buyerId) { const back = location.pathname.split('/').pop() + location.search; try { sessionStorage.setItem('lumiere_return', back); } catch {} location.href = 'login.html?redirect=' + encodeURIComponent(back); break; } const on = b.classList.toggle('active'); b.setAttribute('aria-pressed', String(on)); success(on ? 'Đã lưu vào thiết kế yêu thích.' : 'Đã bỏ khỏi thiết kế yêu thích.'); break; }
       case 'quick-add': location.href = 'product.html?id=' + id; break;
       case 'zoom': { const p = D.products.find(p => p.id === +id); L.confirmModal(`<img class="zoom" src="${esc(asset(p.image))}" alt="${esc(p.name)}"><p>${esc(p.name)}</p>`); break; }
       case 'confirm-cart': { L.closeModal(); pendingCart = null; success('Đã thêm sản phẩm vào giỏ hàng.'); break; }
@@ -251,8 +256,8 @@ document.addEventListener('submit', e => {
       case 'admin-login': S.login(data.email, data.password, 'admin'); flash('Chào mừng bạn đến LUMIÈRE.'); location.href = 'admin-dashboard.html'; break;
       case 'register': { const u = S.saveUser(data); S.login(u.email, data.password); flash('Đã tạo tài khoản.'); location.href = sessionStorage.getItem('lumiere_return') || 'account.html'; sessionStorage.removeItem('lumiere_return'); } break;
       /* DEMO UI/UX: them/sua — chi hien popup thanh cong goc tren phai, khong doi data, o lai trang. */
-      case 'add-cart': { const buy = e.submitter && e.submitter.name === 'buy'; if (buy) { success('Đã đặt hàng thành công.'); } else { success('Đã thêm sản phẩm vào giỏ hàng.'); } break; }
-      case 'checkout': flash('Đã đặt hàng thành công. Cảm ơn bạn đã chọn LUMIÈRE.'); location.href = 'index.html'; break;
+      case 'add-cart': { if (!D.buyerId) { const back = location.pathname.split('/').pop() + location.search; try { sessionStorage.setItem('lumiere_return', back); } catch {} location.href = 'login.html?redirect=' + encodeURIComponent(back); break; } const buy = e.submitter && e.submitter.name === 'buy'; if (buy) { S.validateSelection(data.id, data.size, +data.qty, false); S.startBuyNow(data.id, data.size, +data.qty); try { sessionStorage.setItem('lumiere_buy_now', JSON.stringify({ userId: D.buyerId, items: [{ productId: +data.id, size: data.size, qty: +data.qty }] })); } catch {} location.href = 'checkout.html?mode=buy-now'; } else { success('Đã thêm sản phẩm vào giỏ hàng.'); } break; }
+      case 'checkout': { const u0 = S.buyer(); const merged = { ...data }; for (const k of ['name', 'phone', 'email', 'address', 'region']) if (!String(merged[k] || '').trim()) merged[k] = u0[k] || ''; const isBuyNow = form.dataset.buynow === '1'; if (isBuyNow) { try { const sel = JSON.parse(sessionStorage.getItem('lumiere_buy_now') || 'null'); if (sel && sel.userId === D.buyerId && Array.isArray(sel.items) && sel.items.length) { const it = sel.items[0]; S.startBuyNow(it.productId, it.size, it.qty); } } catch {} } const o = S.checkout(merged, isBuyNow); try { sessionStorage.setItem('lumiere_last_order', JSON.stringify(o)); sessionStorage.removeItem('lumiere_orders'); sessionStorage.removeItem('lumiere_buy_now'); } catch {} flash('Đã đặt hàng thành công. Cảm ơn bạn đã chọn LUMIÈRE.'); location.href = 'success.html?id=' + encodeURIComponent(o.id); break; }
       case 'profile-form': success('Đã lưu thông tin cá nhân.'); break;
       case 'newsletter': success('LUMIÈRE đã lắng nghe.'); form.reset(); break;
       case 'product-form': flash(data.id ? 'Đã lưu thay đổi thiết kế.' : 'Đã thêm sản phẩm mới.'); location.href = 'admin-products.html'; break;
@@ -262,7 +267,7 @@ document.addEventListener('submit', e => {
 });
 document.addEventListener('change', e => {
   if (e.target.name === 'payment') { const box = $('#qr-box'); if (box) box.hidden = e.target.value !== 'qr'; }
-  if (e.target.id === 'address-choice') { const form = $('#checkout'), u = S.buyer(), saved = e.target.value === 'saved'; for (const k of ['name', 'phone', 'address', 'region']) form.elements[k].value = saved ? u[k] : ''; }
+  if (e.target.id === 'address-choice') { const form = $('#checkout'), u = S.buyer(), saved = e.target.value === 'saved'; for (const k of ['name', 'phone', 'email', 'address', 'region']) { if (form.elements[k]) { if (saved) form.elements[k].value = u[k] || ''; form.elements[k].disabled = saved; } } }
   if (e.target.id === 'product-upload') {
     const f = e.target.files[0]; if (!f) return;
     if (!['image/png', 'image/jpeg', 'image/webp'].includes(f.type) || f.size > 8 * 1024 * 1024) { toast('Chọn ảnh PNG, JPEG hoặc WebP tối đa 8 MB.'); e.target.value = ''; return; }
