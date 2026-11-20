@@ -1,0 +1,5 @@
+<!doctype html><html lang="vi"><meta charset="utf-8"><title>Kiểm tra lưu trữ LUMIÈRE</title><body style="font:16px Arial;max-width:760px;margin:60px auto;padding:20px"><h1>Kiểm tra lưu trữ trên trình duyệt này</h1><p>Chạy trang này bằng file:// để kiểm tra quyền lưu trữ của Chrome. Không đọc hoặc thay đổi dữ liệu cửa hàng. Phép thử chỉ dùng một khóa riêng.</p><button id="start">Ghi dữ liệu thử</button> <button id="verify">Tải lại và kiểm tra</button><p id="result" role="status"></p><script>
+const key='__lumiere_storage_probe__';const result=document.getElementById('result');
+function read(){try{result.textContent=localStorage.getItem(key)==='ok'?'PASS: Đọc được dữ liệu thử đã lưu.':'Chưa có dữ liệu thử. Nhấn Ghi dữ liệu thử, rồi Tải lại và kiểm tra.';}catch(e){result.textContent='FAIL: Trình duyệt chặn lưu trữ. Kiểm tra quyền dữ liệu của file này; không dùng chế độ riêng tư.';}}
+document.getElementById('start').onclick=()=>{try{localStorage.setItem(key,'ok');read()}catch(e){result.textContent='FAIL: Không ghi được dữ liệu thử.'}};document.getElementById('verify').onclick=()=>location.reload();read();
+</script></body></html>

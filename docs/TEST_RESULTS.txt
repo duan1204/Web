@@ -1,0 +1,58 @@
+PASS 60 unique product image paths and 5 categories
+PASS Case and Vietnamese diacritics normalization
+PASS Relative name search
+PASS Category + name + price combined
+PASS Price bounds inclusive
+PASS No search results
+PASS Sort price descending
+PASS Pagination has disjoint actual subsets
+PASS Buyer and admin logins separated
+PASS Wrong password rejected
+PASS Locked account rejected
+PASS Registration, duplicate email and validation
+PASS Cart merges same product and size
+PASS Different sizes remain independent with aggregate stock guard
+PASS Invalid size and quantity rejected
+PASS Checkout requires login and nonempty cart
+PASS Checkout validates receiver information
+PASS Checkout total, snapshot, inventory, cart clear and history
+PASS Online simulation stores choice without payment success property
+PASS Checkout blocks changed stock without partial order
+PASS Admin guard on product mutation
+PASS Product create, edit and storefront share source
+PASS Product validates category, amount, stock and image
+PASS Sold product hides and preserves historical order
+PASS Unsold product deletion requires confirmation
+PASS Forward order transitions and terminal state
+PASS Cannot skip confirmation
+PASS Cancel restores reserved stock exactly once
+PASS Combined status + dates + region filter
+PASS Top 5 descending and all totals derived from noncancelled orders
+PASS Top 5 date range and empty interval
+PASS Admin edits and locks user, invalidates buyer session
+PASS Explicit memory-only test store resets mutations
+
+33 tests passed
+
+PASS Anonymous cart/favorites mutation rejected
+PASS Favorites A/B isolation, logout, reload and deletion
+PASS Cart account isolation and persistent merge
+PASS Buy now checks out only selected item, preserves cart
+PASS Direct checkout cannot cross accounts
+PASS Profile survives reload without changing ID/role or another user
+PASS Cancel enforces ownership, status and single stock return
+PASS Confirmed order cannot be cancelled by buyer
+PASS Storage quota failure rolls back checkout and inventory
+PASS Malformed saved data is not overwritten
+PASS New registered account starts with independent empty lists
+11 repair scenarios passed
+
+PASS 105 HTML template render checks (Node VM, not Chrome)
+PASS 65 image references exist
+PASS form prefill, HTML escaping, order ownership and no network dependencies
+
+PASS delegated submit with form.id shadowed, confirm/cancel modal, double-click guard, buy-now isolation, heart markup, profile submit, customer cancellation (Node VM event simulation)
+
+PASS source syntax; index.html and all 65 images byte-identical to uploaded RAR.
+Chrome preview: public home/product and anonymous add-cart redirect observed; browser logic runner 33 PASS; storage probe reload PASS.
+NOT TESTED: file://, offline, authenticated UI E2E, upload and responsive sizes.
