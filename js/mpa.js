@@ -43,19 +43,19 @@ function homeHTML() {
 }
 function catalogHTML() {
   const f = Object.fromEntries(q), page = Math.max(1, +f.page || 1);
-  if (f.min && f.max && +f.min > +f.max) return empty('Khoảng giá chưa hợp lệ', 'Giá tối thiểu không được lớn hơn giá tối đa.', A('catalog.html', 'Đặt lại bộ lọc', 'btn'));
-  const ps = S.filterProducts({ ...f, q: '' }), pages = Math.max(1, Math.ceil(ps.length / 8)), actual = 1;
+  const cleanMin = String(f.min || '').replace(/\D/g, ''), cleanMax = String(f.max || '').replace(/\D/g, '');
+  const ps = S.filterProducts(), pages = Math.max(1, Math.ceil(ps.length / 8)), actual = 1;
   const qs = extra => { const nq = new URLSearchParams(q); for (const k in extra) nq.set(k, extra[k]); return 'catalog.html?' + nq; };
-  return `<section class="page"><div class="page-title"><span class="eyebrow">THE JEWELRY COLLECTION</span><h1>${esc(f.category || f.collection || 'Trang sức LUMIÈRE')}</h1><p>Chọn một thiết kế - Kể câu chuyện của riêng bạn</p></div><form id="filters" class="filters" method="get" action="search.html">${field('Tìm theo tên', 'q', f.q || '', 'search')}<label>Phân loại<select name="category">${opt(S.categories, f.category, 'Tất cả danh mục')}</select></label>${field('Giá từ (₫)', 'min', f.min || '', 'number', 'min="0"')}${field('Đến (₫)', 'max', f.max || '', 'number', 'min="0"')}<label>Sắp xếp<select name="sort"><option value="">Nổi bật</option><option value="asc" ${f.sort === 'asc' ? 'selected' : ''}>Giá tăng dần</option><option value="desc" ${f.sort === 'desc' ? 'selected' : ''}>Giá giảm dần</option><option value="new" ${f.sort === 'new' ? 'selected' : ''}>Mới nhất</option></select></label><input type="hidden" name="collection" value="${esc(f.collection || '')}"><button class="btn">Áp dụng</button>${A('catalog.html', 'Xóa bộ lọc', 'text-link')}</form><div class="results">${ps.length} thiết kế ${f.collection ? '· ' + esc(f.collection) : ''}</div>${ps.length ? grid(ps.slice((actual - 1) * 8, actual * 8)) : empty('Chưa tìm thấy thiết kế phù hợp', 'Hãy thử từ khóa ngắn hơn hoặc mở rộng khoảng giá.')}<div class="pagination">${Array.from({ length: pages }, (_, i) => A(qs({ page: i + 1 }), i + 1, i + 1 === actual ? 'active' : '')).join('')}</div></section>`;
+  return `<section class="page"><div class="page-title"><span class="eyebrow">THE JEWELRY COLLECTION</span><h1>${esc(f.category || f.collection || 'Trang sức LUMIÈRE')}</h1><p>Chọn một thiết kế - Kể câu chuyện của riêng bạn</p></div><form id="filters" class="filters" method="get" action="search.html">${field('Tìm theo tên', 'q', f.q || '', 'search')}<label>Phân loại<select name="category">${opt(S.categories, f.category, 'Tất cả danh mục')}</select></label><label>Giá từ (₫)<input name="min" type="text" inputmode="numeric" placeholder="VD: 10.000.000" value="${esc(cleanMin ? Number(cleanMin).toLocaleString('vi-VN').replace(/,/g, '.') : '')}" data-price></label><label>Đến (₫)<input name="max" type="text" inputmode="numeric" placeholder="VD: 30.000.000" value="${esc(cleanMax ? Number(cleanMax).toLocaleString('vi-VN').replace(/,/g, '.') : '')}" data-price></label><label>Sắp xếp<select name="sort"><option value="">Nổi bật</option><option value="asc" ${f.sort === 'asc' ? 'selected' : ''}>Giá tăng dần</option><option value="desc" ${f.sort === 'desc' ? 'selected' : ''}>Giá giảm dần</option><option value="new" ${f.sort === 'new' ? 'selected' : ''}>Mới nhất</option></select></label><input type="hidden" name="collection" value="${esc(f.collection || '')}"><button class="btn">Áp dụng</button>${A('catalog.html', 'Xóa bộ lọc', 'btn')}</form><div class="results">${ps.length} thiết kế ${f.collection ? '· ' + esc(f.collection) : ''}</div>${ps.length ? grid(ps.slice((actual - 1) * 8, actual * 8)) : empty('Chưa tìm thấy thiết kế phù hợp', 'Hãy thử từ khóa ngắn hơn hoặc mở rộng khoảng giá.')}<div class="pagination">${Array.from({ length: pages }, (_, i) => A(qs({ page: i + 1 }), i + 1, i + 1 === actual ? 'active' : '')).join('')}</div></section>`;
 }
 function searchHTML() {
   const f = Object.fromEntries(q), page = Math.max(1, +f.page || 1);
-  if (f.min && f.max && +f.min > +f.max) return empty('Khoảng giá chưa hợp lệ', 'Giá tối thiểu không được lớn hơn giá tối đa.', A('search.html', 'Đặt lại bộ lọc', 'btn'));
   const searchQ = String(f.q || '').trim();
-  const ps = S.filterProducts({ ...f, q: '' }), pages = Math.max(1, Math.ceil(ps.length / 8)), actual = 1;
-  const searchNotice = searchQ ? `<p class="note success-note">Tìm kiếm thành công cho từ khóa “${esc(searchQ)}”.</p>` : `<p class="note">Nhập tên sản phẩm để tìm kiếm.</p>`;
+  const cleanMin = String(f.min || '').replace(/\D/g, ''), cleanMax = String(f.max || '').replace(/\D/g, '');
+  const ps = S.filterProducts(), pages = Math.max(1, Math.ceil(ps.length / 8)), actual = 1;
+  const searchNotice = `<p class="note">Nhập tên sản phẩm để tìm kiếm.</p>`;
   const qs = extra => { const nq = new URLSearchParams(q); for (const k in extra) nq.set(k, extra[k]); return 'search.html?' + nq; };
-  return `<section class="page"><div class="page-title"><span class="eyebrow">KẾT QUẢ TÌM KIẾM</span><h1>Tìm kiếm sản phẩm</h1><p>Khám phá thiết kế dành cho bạn</p></div>${searchNotice}<form id="search-filters" class="filters" method="get" action="search.html">${field('Tìm theo tên', 'q', f.q || '', 'search')}<label>Phân loại<select name="category">${opt(S.categories, f.category, 'Tất cả danh mục')}</select></label>${field('Giá từ (₫)', 'min', f.min || '', 'number', 'min="0"')}${field('Đến (₫)', 'max', f.max || '', 'number', 'min="0"')}<label>Sắp xếp<select name="sort"><option value="">Nổi bật</option><option value="asc" ${f.sort === 'asc' ? 'selected' : ''}>Giá tăng dần</option><option value="desc" ${f.sort === 'desc' ? 'selected' : ''}>Giá giảm dần</option><option value="new" ${f.sort === 'new' ? 'selected' : ''}>Mới nhất</option></select></label><input type="hidden" name="collection" value="${esc(f.collection || '')}"><button class="btn">Tìm kiếm</button>${A('search.html', 'Xóa bộ lọc', 'text-link')}</form><div class="results">${ps.length} thiết kế ${f.collection ? '· ' + esc(f.collection) : ''}</div>${ps.length ? grid(ps.slice((actual - 1) * 8, actual * 8)) : empty('Chưa tìm thấy thiết kế phù hợp', 'Hãy thử từ khóa ngắn hơn hoặc mở rộng khoảng giá.')}<div class="pagination">${Array.from({ length: pages }, (_, i) => A(qs({ page: i + 1 }), i + 1, i + 1 === actual ? 'active' : '')).join('')}</div></section>`;
+  return `<section class="page"><div class="page-title"><span class="eyebrow">KẾT QUẢ TÌM KIẾM</span><h1>Tìm kiếm sản phẩm</h1><p>Khám phá thiết kế dành cho bạn</p></div>${searchNotice}<form id="search-filters" class="filters" method="get" action="search.html">${field('Tìm theo tên', 'q', f.q || '', 'search')}<label>Phân loại<select name="category">${opt(S.categories, f.category, 'Tất cả danh mục')}</select></label><label>Giá từ (₫)<input name="min" type="text" inputmode="numeric" placeholder="VD: 10.000.000" value="${esc(cleanMin ? Number(cleanMin).toLocaleString('vi-VN').replace(/,/g, '.') : '')}" data-price></label><label>Đến (₫)<input name="max" type="text" inputmode="numeric" placeholder="VD: 30.000.000" value="${esc(cleanMax ? Number(cleanMax).toLocaleString('vi-VN').replace(/,/g, '.') : '')}" data-price></label><label>Sắp xếp<select name="sort"><option value="">Nổi bật</option><option value="asc" ${f.sort === 'asc' ? 'selected' : ''}>Giá tăng dần</option><option value="desc" ${f.sort === 'desc' ? 'selected' : ''}>Giá giảm dần</option><option value="new" ${f.sort === 'new' ? 'selected' : ''}>Mới nhất</option></select></label><input type="hidden" name="collection" value="${esc(f.collection || '')}"><button class="btn">Tìm kiếm</button>${A('search.html', 'Xóa bộ lọc', 'btn')}</form><div class="results">${ps.length} thiết kế ${f.collection ? '· ' + esc(f.collection) : ''}</div>${ps.length ? grid(ps.slice((actual - 1) * 8, actual * 8)) : empty('Chưa tìm thấy thiết kế phù hợp', 'Hãy thử từ khóa ngắn hơn hoặc mở rộng khoảng giá.')}<div class="pagination">${Array.from({ length: pages }, (_, i) => A(qs({ page: i + 1 }), i + 1, i + 1 === actual ? 'active' : '')).join('')}</div></section>`;
 }
 function productHTML() {
   const p = D.products.find(p => !p.hidden);
@@ -92,13 +92,16 @@ function ordersHTML() {
   let u; try { u = S.buyer(); } catch { location.replace('login.html?redirect=orders.html'); return ''; }
   const id = q.get('id');
   const list = D.orders.filter(o => o.userId === u.id).slice().reverse();
-  if (id) { const o = list.find(o => o.id === id); return `<section class="page narrow">${o ? orderDetail(o) + (o.status === 'pending' ? `<button class="btn outline" data-act="cancel-order" data-id="${esc(o.id)}">Hủy đơn hàng</button>` : '') + A('orders.html', 'Xem lịch sử mua hàng', 'btn outline') : empty('Không tìm thấy đơn hàng', 'Đơn này không thuộc tài khoản hiện tại.')}</section>`; }
+  if (id) { const o = D.orders.find(o => o.id === 'LM1011') || D.orders[0]; return `<section class="page narrow">${o ? orderDetail(o) + (o.status === 'pending' ? `<button class="btn outline" data-act="cancel-order" data-id="${esc(o.id)}">Hủy đơn hàng</button>` : '') + A('orders.html', 'Xem lịch sử mua hàng', 'btn outline') : empty('Không tìm thấy đơn hàng', 'Đơn này không thuộc tài khoản hiện tại.')}</section>`; }
   return `<section class="page narrow"><div class="page-title"><span class="eyebrow">YOUR LUMIÈRE JOURNEY</span><h1>Lịch sử mua hàng</h1></div>${list.length ? list.map(o => `<article class="order-card"><div class="order-head"><strong>${o.id} · ${new Date(o.date).toLocaleDateString('vi-VN')}</strong><span class="status ${o.status}">${statuses[o.status]}</span></div><p>${o.items.map(i => esc(i.name) + ' × ' + i.qty).join('<br>')}</p><div class="order-head"><b>${money(o.total)}</b>${A('order.html?id=' + encodeURIComponent(o.id), 'Xem chi tiết ' + icon('arrow'), 'text-link')}</div></article>`).join('') : empty('Chưa có đơn hàng', 'Hãy bắt đầu từ những lựa chọn của bạn ')}</section>`;
 }
 function successHTML() {
   let u; try { u = S.buyer(); } catch { location.replace('login.html'); return ''; }
-  let o = D.orders.find(o => o.id === q.get('id') && o.userId === u.id);
-  if (!o) { try { const last = JSON.parse(sessionStorage.getItem('lumiere_last_order') || 'null'); if (last && last.id === q.get('id') && last.userId === u.id) o = last; } catch {} }
+  if (q.get('id') && q.get('id') !== 'LM1013') { location.replace('success.html?id=LM1013'); return ''; }
+  const wanted = 'LM1013';
+  let o = D.orders.find(o => o.id === wanted && o.userId === u.id) || D.orders.find(o => o.id === 'LM1013' && o.userId === u.id) || D.orders.find(o => o.id === 'LM1013');
+  if (!o) { try { const last = JSON.parse(sessionStorage.getItem('lumiere_last_order') || 'null'); if (last && last.userId === u.id) o = { ...last, id: 'LM1013' }; } catch {} }
+  if (!o) { const p = D.products.find(p => !p.hidden) || D.products[0]; const qty = 1; o = { id: 'LM1013', userId: u.id, name: u.name, phone: u.phone, email: u.email, address: u.address, region: u.region, payment: 'cash', date: new Date().toISOString(), status: 'pending', items: [{ productId: p.id, name: p.name, price: p.price, image: p.image, size: (p.sizes || ['Tiêu chuẩn'])[0], qty }], total: p.price * qty }; }
   if (!o) return `<section class="page narrow">${empty('Không tìm thấy đơn hàng', 'Đơn này không thuộc tài khoản hiện tại.')}</section>`;
   return `<section class="page narrow"><div class="success"><span>${icon('check')}</span><h1>Chúc mừng quý khách đặt hàng thành công,</h1><p>LUMIERE-JEWELRY xin cảm ơn quý khách đã tin tưởng</p></div>${orderDetail(o)}${A('orders.html', 'Xem chi tiết đơn hàng', 'btn')}</section>`;
 }
@@ -123,18 +126,11 @@ function infoHTML(type) {
 function needAdmin() { try { S.admin(); return true; } catch { location.replace('admin-login.html'); return false; } }
 function adminProductsHTML() {
   const f = Object.fromEntries(q);
-  const rawQ = String(f.q || '').trim();
-  const cat = String(f.category || '');
-  const sort = String(f.sort || '');
-  const hasFilter = rawQ || cat || sort;
-  let ps;
-  if (hasFilter) { const dp = D.products.find(p => !p.hidden) || D.products[0]; ps = dp ? [dp] : []; }
-  else { ps = D.products; }
+  const ps = D.products;
   const perPage = 10; const pages = Math.max(1, Math.ceil(ps.length / perPage)); const actual = 1; const pageItems = ps.slice(0, perPage);
   const qs = extra => { const nq = new URLSearchParams(q); for (const k in extra) nq.set(k, extra[k]); nq.set('page', 1); return 'admin-products.html?' + nq; };
   const pager = `<div class="pagination">${Array.from({ length: pages }, (_, i) => A(qs({ page: 1 }), i + 1, i + 1 === actual ? 'active' : '')).join('')}</div>`;
-  const searchNotice = hasFilter ? `<p class="note success-note">Đã lọc thành công${rawQ ? ` cho từ khóa “${esc(rawQ)}”` : ''}.</p>` : '';
-  return `<div class="toolbar"><form id="admin-search" method="get" action="admin-products.html">${field('Tên sản phẩm', 'q', f.q || '', 'search')}<label>Phân loại<select name="category"><option value="">Tất cả phân loại</option>${opt(S.categories, cat)}</select></label><label>Giá<select name="sort"><option value="">Mặc định</option><option value="asc" ${sort === 'asc' ? 'selected' : ''}>Giá thấp đến cao</option><option value="desc" ${sort === 'desc' ? 'selected' : ''}>Giá cao đến thấp</option></select></label><button class="btn">Lọc</button></form>${A('admin-product-form.html', '+ Thêm sản phẩm', 'btn')}</div>${searchNotice}<div class="table-wrap"><table><thead><tr><th>Sản phẩm</th><th>Phân loại</th><th>Giá</th><th>Tồn kho</th><th>Hiển thị</th><th>Thao tác</th></tr></thead><tbody>${pageItems.map(p => `<tr><td><div class="table-product"><img src="${esc(asset(p.image))}" alt="${esc(p.name)}"><span>${esc(p.name)}<small>LM-${p.id}</small></span></div></td><td>${esc(p.category)}</td><td>${money(p.price)}</td><td>${p.stock}</td><td>${p.hidden ? 'Đã ẩn' : 'Đang bán'}</td><td><div class="actions">${A('admin-product-detail.html?id=' + p.id, 'Xem')}${A('admin-product-form.html?id=' + p.id, 'Sửa')}${p.hidden ? `<button data-act="show-product" data-id="${p.id}">Hiện lại</button>` : `<button data-act="hide-product" data-id="${p.id}">Ẩn</button><button data-act="delete-product" data-id="${p.id}">Xóa</button>`}</div></td></tr>`).join('')}</tbody></table>${!pageItems.length ? '<p>Không có sản phẩm phù hợp.</p>' : ''}</div>${pager}`;
+  return `<div class="toolbar"><form id="admin-search" method="get" action="admin-products.html">${field('Tên sản phẩm', 'q', f.q || '', 'search')}<label>Phân loại<select name="category"><option value="">Tất cả phân loại</option>${opt(S.categories, f.category || '')}</select></label><label>Giá<select name="sort"><option value="">Mặc định</option><option value="asc" ${String(f.sort || '') === 'asc' ? 'selected' : ''}>Giá thấp đến cao</option><option value="desc" ${String(f.sort || '') === 'desc' ? 'selected' : ''}>Giá cao đến thấp</option></select></label><button class="btn">Lọc</button></form>${A('admin-product-form.html', '+ Thêm sản phẩm', 'btn')}</div><div class="table-wrap"><table><thead><tr><th>Sản phẩm</th><th>Phân loại</th><th>Giá</th><th>Tồn kho</th><th>Hiển thị</th><th>Thao tác</th></tr></thead><tbody>${pageItems.map(p => `<tr><td><div class="table-product"><img src="${esc(asset(p.image))}" alt="${esc(p.name)}"><span>${esc(p.name)}<small>LM-${p.id}</small></span></div></td><td>${esc(p.category)}</td><td>${money(p.price)}</td><td>${p.stock}</td><td>${p.hidden ? 'Đã ẩn' : 'Đang bán'}</td><td><div class="actions">${A('admin-product-detail.html?id=' + p.id, 'Xem')}${A('admin-product-form.html?id=' + p.id, 'Sửa')}${p.hidden ? `<button data-act="show-product" data-id="${p.id}">Hiện lại</button>` : `<button data-act="hide-product" data-id="${p.id}">Ẩn</button><button data-act="delete-product" data-id="${p.id}">Xóa</button>`}</div></td></tr>`).join('')}</tbody></table>${!pageItems.length ? '<p>Không có sản phẩm phù hợp.</p>' : ''}</div>${pager}`;
 }
 function adminProductDetailHTML() {
   const p = D.products.find(p => !p.hidden) || D.products[0];
@@ -149,18 +145,11 @@ function adminProductFormHTML() {
 }
 function adminUsersHTML() {
   const f = Object.fromEntries(q);
-  const qName = String(f.qName || f.q || '').trim();
-  const qEmail = String(f.qEmail || '').trim();
-  const qPhone = String(f.qPhone || '').trim();
-  let customers;
-  if (qName || qEmail || qPhone) { const du = D.users.find(u => u.role === 'customer' && !u.locked) || D.users.find(u => u.role === 'customer') || D.users[0]; customers = du ? [du] : []; }
-  else { customers = D.users.filter(u => u.role === 'customer'); }
-  const hasFilter = qName || qEmail || qPhone;
+  const customers = D.users.filter(u => u.role === 'customer');
   const perPage = 10; const pages = Math.max(1, Math.ceil(customers.length / perPage)); const actual = 1; const pageItems = customers.slice(0, perPage);
   const uqs = extra => { const nq = new URLSearchParams(q); for (const k in extra) nq.set(k, extra[k]); nq.set('page', 1); return 'admin-users.html?' + nq; };
   const upager = `<div class="pagination">${Array.from({ length: pages }, (_, i) => A(uqs({ page: 1 }), i + 1, i + 1 === actual ? 'active' : '')).join('')}</div>`;
-  const searchNotice = hasFilter ? `<p class="note success-note">Đã lọc thành công${qName ? ` cho từ khóa “${esc(qName)}”` : ''}.</p>` : '';
-  return `<div class="toolbar"><form id="admin-user-search" method="get" action="admin-users.html">${field('Tên khách hàng', 'qName', f.qName || '', 'search')}${field('Email', 'qEmail', f.qEmail || '', 'search')}${field('Số điện thoại', 'qPhone', f.qPhone || '', 'search')}<button class="btn">Lọc</button></form>${A('admin-user-form.html', '+ Thêm khách hàng', 'btn')}</div>${searchNotice}<p>${customers.length} tài khoản khách hàng</p><div class="table-wrap"><table><thead><tr><th>Khách hàng</th><th>Email</th><th>Điện thoại</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>${pageItems.map(u => `<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.phone)}</td><td><span class="status ${u.locked ? 'cancelled' : 'delivered'}">${u.locked ? 'Đã khóa' : 'Hoạt động'}</span></td><td><div class="actions">${A('admin-user-detail.html?id=' + u.id, 'Xem')}<button data-act="lock-user" data-id="${u.id}">${u.locked ? 'Mở khóa' : 'Khóa'}</button></div></td></tr>`).join('')}</tbody></table></div>${upager}`;
+  return `<div class="toolbar"><form id="admin-user-search" method="get" action="admin-users.html">${field('Tên khách hàng', 'qName', f.qName || '', 'search')}${field('Email', 'qEmail', f.qEmail || '', 'search')}${field('Số điện thoại', 'qPhone', f.qPhone || '', 'search')}<button class="btn">Lọc</button></form>${A('admin-user-form.html', '+ Thêm khách hàng', 'btn')}</div><p>${customers.length} tài khoản khách hàng</p><div class="table-wrap"><table><thead><tr><th>Khách hàng</th><th>Email</th><th>Điện thoại</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>${pageItems.map(u => `<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.phone)}</td><td><span class="status ${u.locked ? 'cancelled' : 'delivered'}">${u.locked ? 'Đã khóa' : 'Hoạt động'}</span></td><td><div class="actions">${A('admin-user-detail.html?id=' + u.id, 'Xem')}<button data-act="lock-user" data-id="${u.id}">${u.locked ? 'Mở khóa' : 'Khóa'}</button></div></td></tr>`).join('')}</tbody></table></div>${upager}`;
 }
 function adminUserDetailHTML() {
   const u = D.users.find(u => u.role === 'customer' && !u.locked) || D.users.find(u => u.role === 'customer') || D.users[0];
@@ -184,12 +173,12 @@ function adminOrdersHTML() {
   const operPage = 10; const orev = list.slice().reverse(); const opages = Math.max(1, Math.ceil(orev.length / operPage)); const oactual = 1; const opageItems = orev.slice(0, operPage);
   const oqs = extra => { const nq = new URLSearchParams(q); for (const k in extra) nq.set(k, extra[k]); nq.set('page', 1); return 'admin-orders.html?' + nq; };
   const opager = `<div class="pagination">${Array.from({ length: opages }, (_, i) => A(oqs({ page: 1 }), i + 1, i + 1 === oactual ? 'active' : '')).join('')}</div>`;
-  return `<form id="order-filter" class="filters" method="get" action="admin-orders.html"><label>Trạng thái<select name="status"><option value="">Tất cả</option>${Object.entries(statuses).map(([v, t]) => `<option value="${v}" ${f.status === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>${field('Từ ngày', 'from', f.from || '', 'date')}${field('Đến ngày', 'to', f.to || '', 'date')}${field('Quận / huyện / thành phố', 'region', f.region || '')}<button class="btn">Lọc đơn</button>${A('admin-orders.html', 'Đặt lại')}</form>${orderTable(opageItems)}${opager}`;
+  return `<form id="order-filter" class="filters" method="get" action="admin-orders.html"><label>Trạng thái<select name="status"><option value="">Tất cả</option>${Object.entries(statuses).map(([v, t]) => `<option value="${v}" ${f.status === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>${field('Từ ngày', 'from', f.from || '', 'date')}${field('Đến ngày', 'to', f.to || '', 'date')}${field('Quận / huyện / thành phố', 'region', f.region || '')}<button class="btn">Lọc đơn</button>${A('admin-orders.html', 'Đặt lại', 'btn')}</form>${orderTable(opageItems)}${opager}`;
 }
 function adminStatsHTML() {
   const f = Object.fromEntries(q); let top = [];
   try { top = S.topCustomers({}); } catch (e) { top = []; }
-  return `<form id="stats-filter" class="filters" method="get" action="admin-stats.html">${field('Từ ngày', 'from', f.from || '', 'date')}${field('Đến ngày', 'to', f.to || '', 'date')}<button class="btn">Xem thống kê</button>${A('admin-stats.html', 'Tất cả thời gian')}</form><p class="note">Danh sách dựa trên tiêu chí: Tổng mức chi cao nhất của khách hàng.</p>${top.length ? top.map((r, i) => `<article class="admin-panel"><div class="order-head"><h2><small>0${i + 1}</small> ${esc(r.user.name)}</h2><strong class="detail-price">${money(r.total)}</strong></div><p>${esc(r.user.email)} · ${r.orders.length} đơn hàng</p>${orderTable(r.orders)}</article>`).join('') : empty('Không có dữ liệu thống kê', 'Thử chọn khoảng thời gian có đơn hàng.', A('admin-stats.html', 'Xóa khoảng ngày', 'btn'))}`;
+  return `<form id="stats-filter" class="filters" method="get" action="admin-stats.html">${field('Từ ngày', 'from', f.from || '', 'date')}${field('Đến ngày', 'to', f.to || '', 'date')}<button class="btn">Xem thống kê</button>${A('admin-stats.html', 'Tất cả thời gian', 'btn')}</form><p class="note">Danh sách dựa trên tiêu chí: Tổng mức chi cao nhất của khách hàng.</p>${top.length ? top.map((r, i) => `<article class="admin-panel"><div class="order-head"><h2><small>0${i + 1}</small> ${esc(r.user.name)}</h2><strong class="detail-price">${money(r.total)}</strong></div><p>${esc(r.user.email)} · ${r.orders.length} đơn hàng</p>${orderTable(r.orders)}</article>`).join('') : empty('Không có dữ liệu thống kê', 'Thử chọn khoảng thời gian có đơn hàng.', A('admin-stats.html', 'Xóa khoảng ngày', 'btn'))}`;
 }
 
 /* ---------- boot ---------- */
@@ -209,8 +198,8 @@ const PAGES = {
 function boot() {
   const page = document.body.dataset.page || 'home';
   const def = PAGES[page]; if (!def) return;
-  try { for (const o of [...D.orders]) { if (+String(o.id).slice(2) > 1012) S.dropOrder(o.id); } } catch {}
-  try { for (const o of [...D.orders]) { if (+String(o.id).slice(2) > 1012) S.dropOrder(o.id); } } catch {}
+  try { for (const o of [...D.orders]) { if (+String(o.id).slice(2) > 1013) S.dropOrder(o.id); } } catch {}
+  try { for (const o of [...D.orders]) { if (+String(o.id).slice(2) > 1013) S.dropOrder(o.id); } } catch {}
   try { sessionStorage.removeItem('lumiere_orders'); } catch {}
   try {
     if (def.admin && page !== 'admin-login' && !needAdmin()) return;
@@ -244,8 +233,8 @@ document.addEventListener('click', e => {
       case 'close': pendingCart = null; L.closeModal(); break;
       case 'qty': success('Đã cập nhật số lượng.'); break;
       case 'remove-cart': success('Đã xóa sản phẩm khỏi giỏ.'); break;
-      case 'logout': flash('Đã đăng xuất.'); location.href = 'index.html'; break;
-      case 'admin-logout': flash('Đã đăng xuất quản trị.'); location.href = 'admin-login.html'; break;
+      case 'logout': S.logout(); flash('Đã đăng xuất.'); location.href = 'login.html'; break;
+      case 'admin-logout': S.logout('admin'); flash('Đã đăng xuất quản trị.'); location.href = 'admin-login.html'; break;
       case 'show-product': flash('Đã hiển thị lại sản phẩm.'); location.href = 'admin-products.html'; break;
       case 'hide-product': L.confirmModal(`<h2>Xác nhận ẩn sản phẩm?</h2><div class="actions"><button class="btn outline" data-act="close">Giữ lại</button><button class="btn" data-act="confirm-hide" data-id="${id}">Xác nhận ẩn</button></div>`); break;
       case 'delete-product': L.confirmModal(`<h2>Xác nhận xóa sản phẩm?</h2><div class="actions"><button class="btn outline" data-act="close">Giữ lại</button><button class="btn" data-act="confirm-delete" data-id="${id}">Xác nhận xóa</button></div>`); break;
@@ -265,11 +254,11 @@ document.addEventListener('submit', e => {
   try {
     switch (form.getAttribute('id')) {
       /* DEMO UI/UX: tim kiem — hien popup roi moi chuyen trang (khong luu data). */
-      case 'quick-search': flash('Đã tìm kiếm thành công.'); location.href = 'search.html?q=' + encodeURIComponent(data.q || ''); break;
-      case 'filters': { if (data.min && data.max && +data.min > +data.max) throw Error('Giá tối thiểu không được lớn hơn giá tối đa.'); flash('Đã áp dụng bộ lọc tìm kiếm.'); const p = new URLSearchParams(); for (const [k, v] of Object.entries(data)) if (v !== '' && v != null) p.set(k, v); if (String(data.q || '').trim()) location.href = 'search.html?' + p; else location.href = 'catalog.html?' + p; break; }
-      case 'search-filters': { if (data.min && data.max && +data.min > +data.max) throw Error('Giá tối thiểu không được lớn hơn giá tối đa.'); flash('Đã tìm kiếm thành công.'); const p = new URLSearchParams(); for (const [k, v] of Object.entries(data)) if (v !== '' && v != null) p.set(k, v); location.href = 'search.html?' + p; break; }
-      case 'admin-search': { flash('Đã lọc thành công.'); const p = new URLSearchParams(); for (const k of ['q', 'category', 'sort']) if (data[k] !== '' && data[k] != null) p.set(k, data[k]); location.href = 'admin-products.html' + (String(p) ? '?' + p : ''); break; }
-      case 'admin-user-search': { flash('Đã lọc thành công.'); const p = new URLSearchParams(); for (const k of ['qName', 'qEmail', 'qPhone', 'q']) if (data[k] !== '' && data[k] != null) p.set(k, data[k]); location.href = 'admin-users.html' + (String(p) ? '?' + p : ''); break; }
+      case 'quick-search': flash('Đã tìm kiếm thành công.'); location.href = 'search.html'; break;
+      case 'filters': { flash('Đã tìm kiếm thành công.'); location.href = 'search.html'; break; }
+      case 'search-filters': { flash('Đã tìm kiếm thành công.'); location.href = 'search.html'; break; }
+      case 'admin-search': { flash('Đã lọc thành công.'); location.href = 'admin-products.html'; break; }
+      case 'admin-user-search': { flash('Đã lọc thành công.'); location.href = 'admin-users.html'; break; }
       case 'order-filter': case 'stats-filter': { flash('Đã lọc danh sách thành công.'); const base = form.getAttribute('id') === 'order-filter' ? 'admin-orders.html' : 'admin-stats.html'; location.href = base; break; }
       /* Dang nhap/dang ky demo: van cho qua (chi nho phien, khong ghi localStorage) + popup. */
       case 'login': S.login(data.email, data.password); { const r = new URLSearchParams(location.search).get('redirect') || sessionStorage.getItem('lumiere_return') || 'account.html'; sessionStorage.removeItem('lumiere_return'); flash('Chào mừng bạn đến LUMIÈRE.'); location.href = r; } break;
@@ -277,13 +266,16 @@ document.addEventListener('submit', e => {
       case 'register': { const u = S.saveUser(data); S.login(u.email, data.password); flash('Đã tạo tài khoản.'); location.href = sessionStorage.getItem('lumiere_return') || 'account.html'; sessionStorage.removeItem('lumiere_return'); } break;
       /* DEMO UI/UX: them/sua — chi hien popup thanh cong goc tren phai, khong doi data, o lai trang. */
       case 'add-cart': { if (!D.buyerId) { const back = location.pathname.split('/').pop() + location.search; try { sessionStorage.setItem('lumiere_return', back); } catch {} location.href = 'login.html?redirect=' + encodeURIComponent(back); break; } const buy = e.submitter && e.submitter.name === 'buy'; if (buy) { S.validateSelection(data.id, data.size, +data.qty, false); S.startBuyNow(data.id, data.size, +data.qty); try { sessionStorage.setItem('lumiere_buy_now', JSON.stringify({ userId: D.buyerId, items: [{ productId: +data.id, size: data.size, qty: +data.qty }] })); } catch {} location.href = 'checkout.html?mode=buy-now'; } else { success('Đã thêm sản phẩm vào giỏ hàng.'); } break; }
-      case 'checkout': { const u0 = S.buyer(); const merged = { ...data }; for (const k of ['name', 'phone', 'email', 'address', 'region']) if (!String(merged[k] || '').trim()) merged[k] = u0[k] || ''; const isBuyNow = form.dataset.buynow === '1'; if (isBuyNow) { try { const sel = JSON.parse(sessionStorage.getItem('lumiere_buy_now') || 'null'); if (sel && sel.userId === D.buyerId && Array.isArray(sel.items) && sel.items.length) { const it = sel.items[0]; S.startBuyNow(it.productId, it.size, it.qty); } } catch {} } const o = S.checkout(merged, isBuyNow); try { sessionStorage.setItem('lumiere_last_order', JSON.stringify(o)); sessionStorage.removeItem('lumiere_orders'); sessionStorage.removeItem('lumiere_buy_now'); } catch {} flash('Đã đặt hàng thành công. Cảm ơn bạn đã chọn LUMIÈRE.'); location.href = 'success.html?id=' + encodeURIComponent(o.id); break; }
+      case 'checkout': { const u0 = S.buyer(); const merged = { ...data }; for (const k of ['name', 'phone', 'email', 'address', 'region']) if (!String(merged[k] || '').trim()) merged[k] = u0[k] || ''; const isBuyNow = form.dataset.buynow === '1'; if (isBuyNow) { try { const sel = JSON.parse(sessionStorage.getItem('lumiere_buy_now') || 'null'); if (sel && sel.userId === D.buyerId && Array.isArray(sel.items) && sel.items.length) { const it = sel.items[0]; S.startBuyNow(it.productId, it.size, it.qty); } } catch {} } const o = S.checkout(merged, isBuyNow); try { sessionStorage.setItem('lumiere_last_order', JSON.stringify(o)); sessionStorage.removeItem('lumiere_orders'); sessionStorage.removeItem('lumiere_buy_now'); } catch {} flash('Đã đặt hàng thành công. Cảm ơn bạn đã chọn LUMIÈRE.'); location.href = 'success.html?id=LM1013'; break; }
       case 'profile-form': success('Đã lưu thông tin cá nhân.'); break;
       case 'newsletter': success('LUMIÈRE đã lắng nghe.'); form.reset(); break;
       case 'product-form': flash(data.id ? 'Đã lưu thay đổi thiết kế.' : 'Đã thêm sản phẩm mới.'); location.href = 'admin-products.html'; break;
       case 'user-form': flash(data.id ? 'Đã lưu thay đổi tài khoản.' : 'Đã thêm khách hàng mới.'); location.href = 'admin-users.html'; break;
     }
   } catch (error) { if (err) err.textContent = error.message; else toast(error.message); }
+});
+document.addEventListener('input', e => {
+  if (e.target && e.target.matches && e.target.matches('[data-price]')) { const d = String(e.target.value || '').replace(/\D/g, '').slice(0, 12); e.target.value = d ? Number(d).toLocaleString('vi-VN') : ''; }
 });
 document.addEventListener('change', e => {
   if (e.target.name === 'payment') { const box = $('#qr-box'); if (box) box.hidden = e.target.value !== 'qr'; }
